@@ -4,19 +4,23 @@
 #include <vector>
 #include <string>
 
-class JeuDeLaVie {
+using namespace std;
+
+class JeuDeLaVie
+{
 private:
     Grille grille;
     int iterations;
 
 public:
-    void Charger(const std::string& nomFichier);
+    void Charger(const std::string &nomFichier);
     void simulation();
     void AffichageConsole();
     void AffichageGraphique();
 };
 
-class Grille {
+class Grille
+{
 private:
     std::vector<Cellule> cellules;
 
@@ -26,7 +30,8 @@ public:
     int getTaille();
 };
 
-class Cellule {
+class Cellule
+{
 private:
     bool estVivante;
     int x, y;
@@ -36,15 +41,16 @@ public:
     void updateEtat();
 };
 
-class InterfaceGraphique {
+class InterfaceGraphique
+{
 public:
     void drawGrille();
     void updateAffichage();
     void gereEvenements();
 };
 
-int main(){
-
+int main()
+{
 
     return 0;
 }
