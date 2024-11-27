@@ -19,7 +19,6 @@ public:
 
 int main()
 {
-    test *t = new test();
-    delete t;
+    
     return 0;
 }
