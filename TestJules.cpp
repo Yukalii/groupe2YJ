@@ -1,1 +1,2 @@
 //kouyoumbayé
+int main(){}

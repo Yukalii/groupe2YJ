@@ -30,19 +30,52 @@ public:
     int getTaille();
 };
 
-class Cellule
-{
-private:
-    bool estVivante;
-    int x, y;
+class Cellule{
+    private:
+        bool isalive;
+        int x, y;
 
-public:
-    int countVoisinsVivants();
-    void updateEtat();
+    public:
+        Cellule(bool envie = false, int pos_x = 0, int pos_y = 0): isalive(envie), x(pos_x), y(pos_y){}
+        bool getetat() const { return isalive; }
+        void setetat(bool etat) {isalive = etat;}
+        int getx() const {return x;}
+        int gety() const {return y;}
+
+        int countvoisinsvivants(const vector<vector<Cellule>>& grille){
+        int voisinenvie = 0;
+        int ligne = grille.size();
+        int colonne = grille[0].size();
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+
+                    int newX = x + dx;
+                    int newY = y + dy;
+
+                    // Gestion des bords périodiques
+                    if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) {
+                        liveNeighbors++;
+                    }
+                }
+            }
+            return voisinenvie;
+        }
+
+
+void updateEtat(int voisinenvie){
+    if (!isalive && voisinenvie == 3){
+        isalive = true;
+    }else if(isalive && (voisinenvie < 2 || voisinenvie > 3)) {
+            isalive = false;
+    }
+    }
 };
 
 class InterfaceGraphique
 {
+
 public:
     void drawGrille();
     void updateAffichage();
