@@ -1,6 +1,7 @@
 Jules :
 cd projetPOO
 g++ -o jeu code.cpp -lsfml-graphics -lsfml-window -lsfml-system
+
 ./jeu
 
 Yanis :
