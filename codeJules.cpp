@@ -28,7 +28,7 @@ public:
     int getx() const { return x; }
     int gety() const { return y; }
 
-    int countvoisinsvivants(const std::vector<std::vector<Cellule>> &grille)
+    int countvoisinsvivants(const vector<vector<Cellule>> &grille)
     {
         int voisinenvie = 0;
         int ligne = grille.size();
@@ -70,26 +70,26 @@ public:
 class Grille
 {
 private:
-    std::vector<std::vector<Cellule>> cellules;
+    vector<vector<Cellule>> cellules;
     int ligne, colonne;
 
 public:
     Grille(int l = 0, int c = 0) : ligne(l), colonne(c)
     {
-        cellules.resize(ligne, std::vector<Cellule>(colonne));
+        cellules.resize(ligne, vector<Cellule>(colonne));
     }
 
-    void loadFromFile(const std::string &filename)
+    void loadFromFile(const string &filename)
     {
-        std::ifstream file(filename);
+        ifstream file(filename);
         if (!file)
         {
-            throw std::runtime_error("Impossible d'ouvrir le fichier");
+            throw runtime_error("Impossible d'ouvrir le fichier");
         }
 
         // Lecture des dimensions de la grille
         file >> ligne >> colonne;
-        cellules.resize(ligne, std::vector<Cellule>(colonne));
+        cellules.resize(ligne, vector<Cellule>(colonne));
 
         // Lecture des cellules ligne par ligne
         for (int i = 0; i < ligne; ++i)
@@ -105,7 +105,7 @@ public:
 
     void updateGrille()
     {
-        std::vector<std::vector<Cellule>> newCellules = cellules;
+        vector<vector<Cellule>> newCellules = cellules;
 
         for (int i = 0; i < ligne; ++i)
         {
@@ -119,19 +119,19 @@ public:
         cellules = newCellules;
     }
 
-    const std::vector<std::vector<Cellule>> &getCellules() const { return cellules; }
+    const vector<vector<Cellule>> &getCellules() const { return cellules; }
     int getLigne() const { return ligne; }
     int getColonne() const { return colonne; }
 
-    void writeToFile(const std::string &filename) const
+    void writeToFile(const string &filename) const
     {
-        std::ofstream file(filename);
+        ofstream file(filename);
         if (!file)
         {
-            throw std::runtime_error("Impossible d'ouvrir le fichier de sortie");
+            throw runtime_error("Impossible d'ouvrir le fichier de sortie");
         }
 
-        file << ligne << " " << colonne << std::endl;
+        file << ligne << " " << colonne << endl;
 
         for (const auto &ligne : cellules)
         {
@@ -139,7 +139,7 @@ public:
             {
                 file << (cellule.getetat() ? 1 : 0) << " ";
             }
-            file << std::endl;
+            file << endl;
         }
 
         file.close();
@@ -158,8 +158,8 @@ public:
 class IFileHandler
 {
 public:
-    virtual void loadGrille(Grille &grille, const std::string &filename) = 0;
-    virtual void saveGrille(const Grille &grille, const std::string &filename) = 0;
+    virtual void loadGrille(Grille &grille, const string &filename) = 0;
+    virtual void saveGrille(const Grille &grille, const string &filename) = 0;
     virtual ~IFileHandler() = default;
 };
 
@@ -167,15 +167,15 @@ public:
 class RenduGraphique : public IRendu
 {
 private:
-    sf::RenderWindow window;
-    sf::RectangleShape cell;
+    RenderWindow window;
+    RectangleShape cell;
 
 public:
     RenduGraphique(int width, int height)
-        : window(sf::VideoMode(width, height), "Jeu de la Vie"),
-          cell(sf::Vector2f(cellSize - 1.0f, cellSize - 1.0f))
+        : window(VideoMode(width, height), "Jeu de la Vie"),
+          cell(Vector2f(cellSize - 1.0f, cellSize - 1.0f))
     {
-        cell.setFillColor(sf::Color::White);
+        cell.setFillColor(Color::White);
     }
 
     void render(const Grille &grille, float wait) override
@@ -194,7 +194,7 @@ public:
             }
         }
         window.display();
-        sf::sleep(sf::milliseconds(wait * 1000));
+        sleep(milliseconds(wait * 1000));
     }
 };
 
@@ -202,12 +202,12 @@ public:
 class FileHandler : public IFileHandler
 {
 public:
-    void loadGrille(Grille &grille, const std::string &filename) override
+    void loadGrille(Grille &grille, const string &filename) override
     {
         grille.loadFromFile(filename);
     }
 
-    void saveGrille(const Grille &grille, const std::string &filename) override
+    void saveGrille(const Grille &grille, const string &filename) override
     {
         grille.writeToFile(filename);
     }
@@ -226,7 +226,7 @@ private:
     int iter;
 
 public:
-    JeuDeLaVie(IRendu *r, IFileHandler *fh, const std::string &filename, int maxiter, float twait, int tchoix) : rendu(r), fileHandler(fh), Maxiterations(maxiter), wait(twait), choix(tchoix)
+    JeuDeLaVie(IRendu *r, IFileHandler *fh, const string &filename, int maxiter, float twait, int tchoix) : rendu(r), fileHandler(fh), Maxiterations(maxiter), wait(twait), choix(tchoix)
     {
         fileHandler->loadGrille(grille, filename);
     }
@@ -237,7 +237,7 @@ public:
         {
             for (int iter = 0; iter < Maxiterations; ++iter)
             {
-                fileHandler->saveGrille(grille, "iteration_out_" + std::to_string(iter) + ".txt");
+                fileHandler->saveGrille(grille, "iteration_out_" + to_string(iter) + ".txt");
                 grille.updateGrille();
             }
         }
@@ -259,26 +259,26 @@ int main()
     int Maxiterations, choix;
     float wait;
 
-    std::cout << "Voulez-vous lancer en mode Console(1) ou Graphique(2) ? " << std::endl;
-    std::cin >> choix;
+    cout << "Voulez-vous lancer en mode Console(1) ou Graphique(2) ? " << endl;
+    cin >> choix;
 
     try
     {
         if (choix == 1)
         {
-            std::cout << "Nombre d'itérations : ";
-            std::cin >> Maxiterations;
+            cout << "Nombre d'itérations : ";
+            cin >> Maxiterations;
             wait = 0;
         }
 
         else if (choix == 2)
         {
-            std::cout << "Temps entre itérations (en secondes) : ";
-            std::cin >> wait;
+            cout << "Temps entre itérations (en secondes) : ";
+            cin >> wait;
         }
         else
         {
-            std::cerr << "Choix invalide !" << std::endl;
+            cerr << "Choix invalide !" << endl;
         }
 
         // Charger la grille pour obtenir ses dimensions
@@ -295,9 +295,9 @@ int main()
         JeuDeLaVie jeu(&rendu, &fileHandler, "input.txt", Maxiterations, wait, choix);
         jeu.simulate();
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
-        std::cerr << "Erreur : " << e.what() << std::endl;
+        cerr << "Erreur : " << e.what() << endl;
     }
 
     return 0;
