@@ -37,30 +37,31 @@ public:
         {
             for (int dy = -1; dy <= 1; dy++)           // Même chose pour y
             {
-                if (dx == 0 && dy == 0)
+                if (dx == 0 && dy == 0)                // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
                     continue;
 
-                int newX = x + dx;
-                int newY = y + dy;
+                int newX = x + dx;      // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx) 
+                int newY = y + dy;      // Pareil pour y
 
-                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat())
+                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille) 
+                                                                                                              //et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
                 {
-                    voisinalive++;
+                    voisinalive++; // +1 voisin vivant
                 }
             }
         }
-        return voisinalive;
+        return voisinalive; //retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
     }
 
-    void updateEtat(int voisinalive)
+    void updateEtat(int voisinalive)        //Méthode faisant appliquer la règle de vie ou de mort de la cellule 
     {
-        if (!isalive && voisinalive == 3)
-        {
-            isalive = true;
+        if (!isalive && voisinalive == 3)       // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
+        {               
+            isalive = true;                     //Sinon elle meurt
         }
-        else if (isalive && (voisinalive < 2 || voisinalive > 3))
-        {
-            isalive = false;
+        else if (isalive && (voisinalive < 2 || voisinalive > 3))   //Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou + 
+        {   
+            isalive = false;                                        //Elle meurt(ou reste morte)
         }
     }
 };
