@@ -15,8 +15,8 @@ const int cellSize = 10; // en pixels/coté
 // Classe représentant une cellule
 class Cellule
 {
-private:
-    bool isalive;
+private:          // foe"jge
+    bool isalive; // kfoejf
     int x, y;
 
 public:
