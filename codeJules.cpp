@@ -20,48 +20,49 @@ private:          // foe"jge
     int x, y;
 
 public:
-    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0): isalive(alive), x(pos_x), y(pos_y) {} //Constructeur de "Cellule" qui associe les variables aux variables temporaires
+    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0) : isalive(alive), x(pos_x), y(pos_y) {} // Constructeur de "Cellule" qui associe les variables aux variables temporaires
 
-    bool getetat() const { return isalive; } // Méthode qui retourne l'état de la variable isalive(true/false) GETTER
+    bool getetat() const { return isalive; }    // Méthode qui retourne l'état de la variable isalive(true/false) GETTER
     void setetat(bool etat) { isalive = etat; } // Méthode qui définie l'état de la variable isalive à etat(true/false) SETTER
-    int getx() const { return x; } //" " " " pour retourner x
-    int gety() const { return y; } //" " " " pour retourner y
+    int getx() const { return x; }              //" " " " pour retourner x
+    int gety() const { return y; }              //" " " " pour retourner y
 
-    int countvoisinsvivants(const vector<vector<Cellule>> &grille){ //compte le nombre de cellules vivantes autour d'une cellule avec vector.
-        
-        int voisinalive = 0;                         // set de base à 0
-        int ligne = grille.size();                   // récupere la taille de la grille grâce à .size() et l'associe à ligne
-        int colonne = grille[0].size();              // " " Le [0] récupère sa longueur, qui représente le nombre total de colonnes de la grille.
+    int countvoisinsvivants(const vector<vector<Cellule>> &grille)
+    { // compte le nombre de cellules vivantes autour d'une cellule avec vector.
 
-        for (int dx = -1; dx <= 1; dx++)             //On int dx à -1 et max à <= 1 pour avoir 1 x de moins, le x et 1 x de plus que la cellule que l'on veut analyser
+        int voisinalive = 0;            // set de base à 0
+        int ligne = grille.size();      // récupere la taille de la grille grâce à .size() et l'associe à ligne
+        int colonne = grille[0].size(); // " " Le [0] récupère sa longueur, qui représente le nombre total de colonnes de la grille.
+
+        for (int dx = -1; dx <= 1; dx++) // On int dx à -1 et max à <= 1 pour avoir 1 x de moins, le x et 1 x de plus que la cellule que l'on veut analyser
         {
-            for (int dy = -1; dy <= 1; dy++)           // Même chose pour y
+            for (int dy = -1; dy <= 1; dy++) // Même chose pour y
             {
-                if (dx == 0 && dy == 0)                // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
+                if (dx == 0 && dy == 0) // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
                     continue;
 
-                int newX = x + dx;      // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx) 
-                int newY = y + dy;      // Pareil pour y
+                int newX = x + dx; // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx)
+                int newY = y + dy; // Pareil pour y
 
-                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille) 
-                                                                                                              //et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
+                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille)
+                                                                                                              // et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
                 {
                     voisinalive++; // +1 voisin vivant
                 }
             }
         }
-        return voisinalive; //retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
+        return voisinalive; // retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
     }
 
-    void updateEtat(int voisinalive)        //Méthode faisant appliquer la règle de vie ou de mort de la cellule 
+    void updateEtat(int voisinalive) // Méthode faisant appliquer la règle de vie ou de mort de la cellule
     {
-        if (!isalive && voisinalive == 3)       // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
-        {               
-            isalive = true;                     //Sinon elle meurt
+        if (!isalive && voisinalive == 3) // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
+        {
+            isalive = true; // Sinon elle meurt
         }
-        else if (isalive && (voisinalive < 2 || voisinalive > 3))   //Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou + 
-        {   
-            isalive = false;                                        //Elle meurt(ou reste morte)
+        else if (isalive && (voisinalive < 2 || voisinalive > 3)) // Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou +
+        {
+            isalive = false; // Elle meurt(ou reste morte)
         }
     }
 };

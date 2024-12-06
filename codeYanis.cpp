@@ -1,10 +1,13 @@
-#include <SFML/Graphics.hpp> //Pour l'interface graphique
-#include <vector>            //Pour les vecteurs
-#include <fstream>           //Pour manipuler les fichier input/output
-#include <iostream>          //Pour les entrées/sorties console (cin par exemple)
-#include <stdexcept>         //Pour gérer les exceptions standard
-#include <string>            //Pour les strings
-#include <thread>            //Pour le sleep(attendre sans rien faire)
+#include <SFML/Graphics.hpp>
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <limits>
 
 using namespace std;
 using namespace sf;
@@ -15,54 +18,54 @@ const int cellSize = 10; // en pixels/coté
 // Classe représentant une cellule
 class Cellule
 {
-private:          // foe"jge
-    bool isalive; // kfoejf
+protected:
+    bool isalive;
     int x, y;
+    int ok = 1; // variable pour le voisinnage
 
 public:
-    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0) : isalive(alive), x(pos_x), y(pos_y) {} // Constructeur de "Cellule" qui associe les variables aux variables temporaires
+    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0) : isalive(alive), x(pos_x), y(pos_y) {}
 
-    bool getetat() const { return isalive; }    // Méthode qui retourne l'état de la variable isalive(true/false) GETTER
-    void setetat(bool etat) { isalive = etat; } // Méthode qui définie l'état de la variable isalive à etat(true/false) SETTER
-    int getx() const { return x; }              //" " " " pour retourner x
-    int gety() const { return y; }              //" " " " pour retourner y
+    bool getetat() const { return isalive; }
+    void setetat(bool etat) { isalive = etat; }
+    int getx() const { return x; }
+    int gety() const { return y; }
 
     int countvoisinsvivants(const vector<vector<Cellule>> &grille)
-    { // compte le nombre de cellules vivantes autour d'une cellule avec vector.
+    {
 
-        int voisinalive = 0;            // set de base à 0
-        int ligne = grille.size();      // récupere la taille de la grille grâce à .size() et l'associe à ligne
-        int colonne = grille[0].size(); // " " Le [0] récupère sa longueur, qui représente le nombre total de colonnes de la grille.
+        int voisinalive = 0;
+        int ligne = grille.size();
+        int colonne = grille[0].size();
 
-        for (int dx = -1; dx <= 1; dx++) // On int dx à -1 et max à <= 1 pour avoir 1 x de moins, le x et 1 x de plus que la cellule que l'on veut analyser
+        for (int dx = -ok; dx <= ok; dx++)
         {
-            for (int dy = -1; dy <= 1; dy++) // Même chose pour y
+            for (int dy = -ok; dy <= ok; dy++)
             {
-                if (dx == 0 && dy == 0) // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
+                if (dx == 0 && dy == 0)
                     continue;
 
-                int newX = x + dx; // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx)
-                int newY = y + dy; // Pareil pour y
+                int newX = x + dx;
+                int newY = y + dy;
 
-                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille)
-                                                                                                              // et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
+                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat())
                 {
-                    voisinalive++; // +1 voisin vivant
+                    voisinalive++;
                 }
             }
         }
-        return voisinalive; // retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
+        return voisinalive;
     }
 
-    void updateEtat(int voisinalive) // Méthode faisant appliquer la règle de vie ou de mort de la cellule
+    void updateEtat(int voisinalive)
     {
-        if (!isalive && voisinalive == 3) // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
+        if (!isalive && voisinalive == 3)
         {
-            isalive = true; // Sinon elle meurt
+            isalive = true;
         }
-        else if (isalive && (voisinalive < 2 || voisinalive > 3)) // Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou +
+        else if (isalive && (voisinalive < 2 || voisinalive > 3))
         {
-            isalive = false; // Elle meurt(ou reste morte)
+            isalive = false;
         }
     }
 };
@@ -88,11 +91,9 @@ public:
             throw runtime_error("Impossible d'ouvrir le fichier");
         }
 
-        // Lecture des dimensions de la grille
         file >> ligne >> colonne;
         cellules.resize(ligne, vector<Cellule>(colonne));
 
-        // Lecture des cellules ligne par ligne
         for (int i = 0; i < ligne; ++i)
         {
             for (int j = 0; j < colonne; ++j)
@@ -120,6 +121,7 @@ public:
         cellules = newCellules;
     }
 
+    vector<vector<Cellule>> &getCellules() { return cellules; }
     const vector<vector<Cellule>> &getCellules() const { return cellules; }
     int getLigne() const { return ligne; }
     int getColonne() const { return colonne; }
@@ -151,6 +153,7 @@ public:
 class IRendu
 {
 public:
+    RenderWindow window;
     virtual void render(const Grille &grille, float wait) = 0;
     virtual ~IRendu() = default;
 };
@@ -168,26 +171,18 @@ public:
 class RenduGraphique : public IRendu
 {
 private:
-    RenderWindow window;
     RectangleShape cell;
 
 public:
     RenduGraphique(int width, int height)
-        : window(VideoMode(width, height), "Jeu de la Vie"),
-          cell(Vector2f(cellSize - 1.0f, cellSize - 1.0f))
+        : cell(Vector2f(cellSize - 1.0f, cellSize - 1.0f))
     {
+        window.create(VideoMode(width, height), "Jeu de la Vie");
         cell.setFillColor(Color::White);
     }
 
     void render(const Grille &grille, float wait) override
     {
-        Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == Event::Closed)
-                window.close();
-        }
-
         window.clear();
         const auto &cellules = grille.getCellules();
         for (int i = 0; i < grille.getLigne(); ++i)
@@ -202,7 +197,7 @@ public:
             }
         }
         window.display();
-        sleep(seconds(wait)); // Pause entre les itérations
+        sleep(milliseconds(wait * 1000));
     }
 };
 
@@ -218,6 +213,113 @@ public:
     void saveGrille(const Grille &grille, const string &filename) override
     {
         grille.writeToFile(filename);
+    }
+};
+
+class newmotif : public Cellule
+{
+public:
+    static void addcarre(Grille &grille, int startX, int startY)
+    {
+        bool placingSquare = true;
+        while (placingSquare)
+        {
+            cout << "Indiquez les coordonnées de votre carré x puis y (appuyez sur Entrée après chaque valeur): " << endl;
+
+            // Ensure we get valid input
+            while (!(cin >> startX) || !(cin >> startY))
+            {
+                cin.clear();                                         // Clear error flags
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard invalid input
+                cout << "Entrée invalide. Réessayez." << endl;
+            }
+
+            // Get a reference to the cellules in the grid
+            vector<vector<Cellule>> &cellules = grille.getCellules();
+
+            // Validate coordinates before adding
+            if (startX < 0 || startY < 0 ||
+                startX + 1 >= cellules.size() ||
+                startY + 1 >= cellules[0].size())
+            {
+                cout << "Coordonnées invalides. Réessayez." << endl;
+                continue;
+            }
+
+            // Add the square
+            cellules[startX][startY].setetat(true);
+            cellules[startX][startY + 1].setetat(true);
+            cellules[startX + 1][startY].setetat(true);
+            cellules[startX + 1][startY + 1].setetat(true);
+
+            placingSquare = false; // Exit the placement loop
+        }
+    }
+
+    static void addblinker(Grille &grille, int startX, int startY)
+    {
+        bool placingBlinker = true;
+        while (placingBlinker)
+        {
+            cout << "Indiquez les coordonnées de votre clignotant x puis y (appuyez sur Entrée après chaque valeur): " << endl;
+
+            while (!(cin >> startX) || !(cin >> startY))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Entrée invalide. Réessayez." << endl;
+            }
+
+            vector<vector<Cellule>> &cellules = grille.getCellules();
+
+            if (startX < 0 || startY < 0 ||
+                startX + 1 >= cellules.size() ||
+                startY + 1 >= cellules[0].size())
+            {
+                cout << "Coordonnées invalides. Réessayez." << endl;
+                continue;
+            }
+
+            cellules[startX][startY].setetat(true);
+            cellules[startX + 1][startY].setetat(true);
+            cellules[startX + 2][startY].setetat(true);
+
+            placingBlinker = false;
+        }
+    }
+
+    static void addGlider(Grille &grille, int startX, int startY)
+    {
+        bool placingGlider = true;
+        while (placingGlider)
+        {
+            cout << "Indiquez les coordonnées de votre glider x puis y (appuyez sur Entrée après chaque valeur): " << endl;
+
+            while (!(cin >> startX) || !(cin >> startY))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Entrée invalide. Réessayez." << endl;
+            }
+
+            vector<vector<Cellule>> &cellules = grille.getCellules();
+
+            if (startX < 0 || startY < 0 ||
+                startX + 1 >= cellules.size() ||
+                startY + 1 >= cellules[0].size())
+            {
+                cout << "Coordonnées invalides. Réessayez." << endl;
+                continue;
+            }
+
+            cellules[startX][startY].setetat(true);
+            cellules[startX + 1][startY].setetat(true);
+            cellules[startX + 2][startY].setetat(true);
+            cellules[startX + 2][startY + 1].setetat(true);
+            cellules[startX + 1][startY + 2].setetat(true);
+
+            placingGlider = false;
+        }
     }
 };
 
@@ -243,16 +345,51 @@ public:
     {
         if (choix == 1)
         {
-            for (int iter = 0; iter < Maxiterations; ++iter)
-            {
-                fileHandler->saveGrille(grille, "iteration_out_" + to_string(iter) + ".txt");
-                grille.updateGrille();
-            }
+            // Votre code existant
         }
         else if (choix == 2)
         {
-            while (1)
+            while (rendu->window.isOpen())
             {
+                // Check for events
+                sf::Event event;
+                while (rendu->window.pollEvent(event))
+                {
+                    // Close window handling
+                    if (event.type == sf::Event::Closed)
+                    {
+                        rendu->window.close();
+                        return;
+                    }
+
+                    // Check for 'c' key press
+                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::C)
+                    {
+                        int startX = 0, startY = 0;
+
+                        // Pause the simulation
+                        newmotif::addcarre(grille, startX, startY);
+                    }
+
+                    // Check for 'b' key press
+                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::B)
+                    {
+                        int startX = 0, startY = 0;
+
+                        // Pause the simulation
+                        newmotif::addblinker(grille, startX, startY);
+                    }
+
+                    // Check for 'g' key press
+                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G)
+                    {
+                        int startX = 0, startY = 0;
+
+                        // Pause the simulation
+                        newmotif::addGlider(grille, startX, startY);
+                    }
+                }
+
                 fileHandler->saveGrille(grille, "iterationfinale.txt");
                 grille.updateGrille();
                 rendu->render(grille, wait);
@@ -266,6 +403,10 @@ int main()
 {
     int Maxiterations, choix;
     float wait;
+
+    cout << "Indiquez la taille du voisinnage ? " << endl;
+    int ok = 1;
+    cin >> ok;
 
     cout << "Voulez-vous lancer en mode Console(1) ou Graphique(2) ? " << endl;
     cin >> choix;
@@ -292,7 +433,7 @@ int main()
         // Charger la grille pour obtenir ses dimensions
         FileHandler fileHandler;
         Grille grille;
-        fileHandler.loadGrille(grille, "input.txt");
+        fileHandler.loadGrille(grille, "GliderCanon.txt");
 
         // Initialiser le rendu graphique avec les dimensions détectées
         int width = grille.getColonne() * cellSize; // Largeur de la fenêtre
@@ -300,7 +441,7 @@ int main()
         RenduGraphique rendu(width, height);
 
         // Lancer le jeu
-        JeuDeLaVie jeu(&rendu, &fileHandler, "input.txt", Maxiterations, wait, choix);
+        JeuDeLaVie jeu(&rendu, &fileHandler, "GliderCanon.txt", Maxiterations, wait, choix);
         jeu.simulate();
     }
     catch (const exception &e)
