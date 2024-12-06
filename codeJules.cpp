@@ -1,73 +1,64 @@
-#include <SFML/Window/Event.hpp> //Pour gerer les touches de clavier
-#include <SFML/Graphics.hpp> //Pour l'interface graphique
-#include <vector>            //Pour les vecteurs
-#include <fstream>           //Pour manipuler les fichier input/output
-#include <iostream>          //Pour les entrées/sorties console (cin par exemple)
-#include <stdexcept>         //Pour gérer les exceptions standard
-#include <string>            //Pour les strings
-#include <thread>            //Pour le sleep(attendre sans rien faire)
-
-int ok;
+#include <SFML/Window/Event.hpp>
+#include <SFML/Graphics.hpp>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <thread>
 
 using namespace std;
 using namespace sf;
 
- 
+const int cellSize = 10;
 
-// Taille des cellules pour l'affichage
-const int cellSize = 10; // en pixels/coté
-
-// Classe représentant une cellule
 class Cellule
 {
 protected:
     bool isalive;
     int x, y;
 
-
 public:
-    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0): isalive(alive), x(pos_x), y(pos_y) {} //Constructeur de "Cellule" qui associe les variables aux variables temporaires
+    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0): isalive(alive), x(pos_x), y(pos_y) {}
    
-    bool getetat() const { return isalive; } // Méthode qui retourne l'état de la variable isalive(true/false) GETTER
-    void setetat(bool etat) { isalive = etat; } // Méthode qui définie l'état de la variable isalive à etat(true/false) SETTER
-    int getx() const { return x; } //" " " " pour retourner x
-    int gety() const { return y; } //" " " " pour retourner y
+    bool getetat() const { return isalive; }
+    void setetat(bool etat) { isalive = etat; }
+    int getx() const { return x; }
+    int gety() const { return y; }
 
-    int countvoisinsvivants(const vector<vector<Cellule>> &grille){ //compte le nombre de cellules vivantes autour d'une cellule avec vector.
-        
-        int voisinalive = 0;                         // set de base à 0
-        int ligne = grille.size();                   // récupere la taille de la grille grâce à .size() et l'associe à ligne
-        int colonne = grille[0].size();              // " " Le [0] récupère sa longueur, qui représente le nombre total de colonnes de la grille.
+    int countvoisinsvivants(const vector<vector<Cellule>> &grille, int tok) {
+        int voisinalive = 0;
+        int ligne = grille.size();
+        int colonne = grille[0].size();
 
-        for (int dx = -ok; dx <= ok; dx++)             //On int dx à -1 et max à <= 1 pour avoir 1 x de moins, le x et 1 x de plus que la cellule que l'on veut analyser
+        for (int dx = -tok; dx <= tok; dx++)
         {
-            for (int dy = -ok; dy <= ok; dy++)           // Même chose pour y
+            for (int dy = -tok; dy <= tok; dy++)
             {
-                if (dx == 0 && dy == 0)                // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
+                if (dx == 0 && dy == 0)
                     continue;
 
-                int newX = x + dx;      // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx) 
-                int newY = y + dy;      // Pareil pour y
+                int newX = x + dx;
+                int newY = y + dy;
 
-                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille) 
-                                                                                                              //et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
+                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat())
                 {
-                    voisinalive++; // +1 voisin vivant
+                    voisinalive++;
                 }
             }
         }
-        return voisinalive; //retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
+        return voisinalive;
     }
 
-    void updateEtat(int voisinalive)        //Méthode faisant appliquer la règle de vie ou de mort de la cellule 
+    void updateEtat(int voisinalive)
     {
-        if (!isalive && voisinalive == 3)       // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
+        if (!isalive && voisinalive == 3)
         {               
-            isalive = true;                     //Sinon elle meurt
+            isalive = true;
         }
-        else if (isalive && (voisinalive < 2 || voisinalive > 3))   //Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou + 
+        else if (isalive && (voisinalive < 2 || voisinalive > 3))
         {   
-            isalive = false;                                        //Elle meurt(ou reste morte)
+            isalive = false;
         }
     }
 };
@@ -109,21 +100,21 @@ public:
         }
     }
 
-    void updateGrille()
+void updateGrille()
+{
+    vector<vector<Cellule>> newCellules = cellules;
+
+    for (int i = 0; i < ligne; ++i)
     {
-        vector<vector<Cellule>> newCellules = cellules; // même chose que pour la ligne 73
-
-        for (int i = 0; i < ligne; ++i)
+        for (int j = 0; j < colonne; ++j)   // on parcourt toute la grille 
         {
-            for (int j = 0; j < colonne; ++j)   // on parcourt toute la grille 
-            {
-                int voisinalive = cellules[i][j].countvoisinsvivants(cellules); // on stocke le nombre de voisins vivants dans la variable voisinalive grâce à countvoisinsvivants() qui fait respecter les regles du jeu 
-                newCellules[i][j].updateEtat(voisinalive);  //ici on définit le nouvel état de la cellule en fonction des règles du jeu
-            }
+            int voisinalive = cellules[i][j].countvoisinsvivants(cellules, 1); 
+            newCellules[i][j].updateEtat(voisinalive);  //ici on définit le nouvel état de la cellule en fonction des règles du jeu
         }
-
-        cellules = newCellules; // puis on redéfinit la grille "de base" avec la nouvelle grille pour pouvoir recommencer le processus
     }
+
+    cellules = newCellules; // puis on redéfinit la grille "de base" avec la nouvelle grille pour pouvoir recommencer le processus
+}
 
     vector<vector<Cellule>>& getCellules() { return cellules; }
     const vector<vector<Cellule>>& getCellules() const { return cellules; }
@@ -393,7 +384,7 @@ int main()
     float wait;
 
     cout << "Indiquez la taille du voisinnage ? " << endl;
-    
+    int ok;
     cin >> ok;
 
     cout << "Voulez-vous lancer en mode Console(1) ou Graphique(2) ? " << endl;
@@ -421,7 +412,7 @@ int main()
         // Charger la grille pour obtenir ses dimensions
         FileHandler fileHandler;
         Grille grille;
-        fileHandler.loadGrille(grille, "input.txt");
+        fileHandler.loadGrille(grille, "Kok.txt");
 
         // Initialiser le rendu graphique avec les dimensions détectées
         int width = grille.getColonne() * cellSize; // Largeur de la fenêtre
@@ -429,7 +420,7 @@ int main()
         RenduGraphique rendu(width, height);
 
         // Lancer le jeu
-        JeuDeLaVie jeu(&rendu, &fileHandler, "input.txt", Maxiterations, wait, choix);
+        JeuDeLaVie jeu(&rendu, &fileHandler, "Kok.txt", Maxiterations, wait, choix);
         jeu.simulate();
     }
     catch (const exception &e)
