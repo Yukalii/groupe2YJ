@@ -1,16 +1,19 @@
-#include <SFML/Window/Event.hpp>
-#include <SFML/Graphics.hpp>
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <thread>
+#include <SFML/Window/Event.hpp> //Pour gerer les touches de clavier
+#include <SFML/Graphics.hpp>     //Pour l'interface graphique
+#include <vector>                //Pour les vecteurs
+#include <fstream>               //Pour manipuler les fichier input/output
+#include <iostream>              //Pour les entrées/sorties console (cin par exemple)
+#include <stdexcept>             //Pour gérer les exceptions standard
+#include <string>                //Pour les strings
+#include <thread>                //Pour le sleep(attendre sans rien faire)
 
 using namespace std;
 using namespace sf;
 
-const int cellSize = 10;
+// Taille des cellules pour l'affichage
+const int cellSize = 10; // en pixels/coté
+
+// Taille des cellules pour l'affichage
 
 class Cellule
 {
@@ -19,45 +22,47 @@ protected:
     int x, y;
 
 public:
-    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0) : isalive(alive), x(pos_x), y(pos_y) {}
+    Cellule(bool alive = false, int pos_x = 0, int pos_y = 0) : isalive(alive), x(pos_x), y(pos_y) {} // Constructeur de "Cellule" qui associe les variables aux variables temporaires
 
-    bool getetat() const { return isalive; }
-    void setetat(bool etat) { isalive = etat; }
-    int getx() const { return x; }
-    int gety() const { return y; }
+    bool getetat() const { return isalive; }    // Méthode qui retourne l'état de la variable isalive(true/false) GETTER
+    void setetat(bool etat) { isalive = etat; } // Méthode qui définie l'état de la variable isalive à etat(true/false) SETTER
+    int getx() const { return x; }              //" " " " pour retourner x
+    int gety() const { return y; }              //" " " " pour retourner y
 
-    int countvoisinsvivants(const vector<vector<Cellule>> &grille, int tok)
+    int countvoisinsvivants(const vector<vector<Cellule>> &grille, int tok) // compte le nombre de cellules vivantes autour d'une cellule avec vector.
+
     {
-        int voisinalive = 0;
-        int ligne = grille.size();
-        int colonne = grille[0].size();
+        int voisinalive = 0;            // set de base à 0
+        int ligne = grille.size();      // récupere la taille de la grille grâce à .size() et l'associe à ligne
+        int colonne = grille[0].size(); // " " Le [0] récupère sa longueur, qui représente le nombre total de colonnes de la grille.
 
-        for (int dx = -tok; dx <= tok; dx++)
+        for (int dx = -tok; dx <= tok; dx++) // On int dx à -1 et max à <= 1 pour avoir 1 x de moins, le x et 1 x de plus que la cellule que l'on veut analyser
         {
-            for (int dy = -tok; dy <= tok; dy++)
+            for (int dy = -tok; dy <= tok; dy++) // Même chose pour y
             {
-                if (dx == 0 && dy == 0)
+                if (dx == 0 && dy == 0) // Si x et y sont = 0 cela signifie que c'est la case dont on veut connaitre les voisins donc on continue
+
                     continue;
 
-                int newX = x + dx;
-                int newY = y + dy;
+                int newX = x + dx; // On init newX qui prend l'addition de x et de la cellule actuellement analysé (dx)
+                int newY = y + dy; // Pareil pour y
 
-                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat())
-                {
-                    voisinalive++;
+                if (newX >= 0 && newX < ligne && newY >= 0 && newY < colonne && grille[newX][newY].getetat()) // Si la valeur de newX et newY sont pas négative et < lignet et colonne (donc hors de la grille)
+                {                                                                                             // et que la valeur de cette celulle est true(vivante) alors on incrémente le compteur de voisins vivants
+                    voisinalive++;                                                                            // +1 voisin vivant
                 }
             }
         }
-        return voisinalive;
+        return voisinalive; // retourne le nombre de voisins vivants de la cellule concernée à l'appel de la fonction "countvoisinsvivants()"
     }
 
-    void updateEtat(int voisinalive)
+    void updateEtat(int voisinalive) // Méthode faisant appliquer la règle de vie ou de mort de la cellule
     {
-        if (!isalive && voisinalive == 3)
+        if (!isalive && voisinalive == 3) // si la cellule est morte et possède 3 voisines vivantes alors elle prend vie
         {
             isalive = true;
         }
-        else if (isalive && (voisinalive < 2 || voisinalive > 3))
+        else if (isalive && (voisinalive < 2 || voisinalive > 3)) // Sinon si elle est en vie et que le nombre de voisines vivantes est 1 ou 4 ou +, elle meurt(ou reste morte)
         {
             isalive = false;
         }
@@ -80,7 +85,7 @@ public:
     void loadFromFile(const string &filename) // Méthode pour charger la grille depuis le fichier "input.txt"
     {
         ifstream file(filename); // pour ouvrir le fichier spécicifié par filename
-        if (!file)               // si il n'arrive pas à ouvrir le fichier on a alors une erreur
+        if (!file)               // s'il n'arrive pas à ouvrir le fichier on a alors une erreur
         {
             throw runtime_error("Impossible d'ouvrir le fichier");
         }
@@ -109,8 +114,8 @@ public:
         {
             for (int j = 0; j < colonne; ++j) // on parcourt toute la grille
             {
-                int voisinalive = cellules[i][j].countvoisinsvivants(cellules, 1);
-                newCellules[i][j].updateEtat(voisinalive); // ici on définit le nouvel état de la cellule en fonction des règles du jeu
+                int voisinalive = cellules[i][j].countvoisinsvivants(cellules, 1); // on stocke le nombre de voisins vivants dans la variable voisinalive grâce à countvoisinsvivants() qui fait respecter les regles du jeu
+                newCellules[i][j].updateEtat(voisinalive);                         // ici on définit le nouvel état de la cellule en fonction des règles du jeu
             }
         }
 
@@ -132,11 +137,11 @@ public:
 
         file << ligne << " " << colonne << endl; // réécris le nombre de ligne et de colonne initial et saute une ligne pour après écrire l'état des cellules
 
-        for (const auto &ligne : cellules)
+        for (const auto &ligne : cellules) // on parcourt les lignes
         {
-            for (const auto &cellule : ligne)
+            for (const auto &cellule : ligne) // on parcourt les cellules
             {
-                file << (cellule.getetat() ? 1 : 0) << " ";
+                file << (cellule.getetat() ? 1 : 0) << " "; // si la cellule est vivante on écrit 1 sinon 0
             }
             file << endl; // ici on parcourt les cellules, on récupère leur état avec getetat et on l'écris dans le fichier puis on le ferme
         }
@@ -149,25 +154,25 @@ public:
 class IRendu
 {
 public:
-    RenderWindow window;
-    virtual void render(const Grille &grille, float wait) = 0;
-    virtual ~IRendu() = default;
+    RenderWindow window;                                       // Création de la fenêtre graphique
+    virtual void render(const Grille &grille, float wait) = 0; // Méthode virtuelle pure pour le rendu
+    virtual ~IRendu() = default;                               // Destructeur virtuel
 };
 
 // Interface pour la gestion des fichiers
 class IFileHandler
 {
 public:
-    virtual void loadGrille(Grille &grille, const string &filename) = 0;
-    virtual void saveGrille(const Grille &grille, const string &filename) = 0;
-    virtual ~IFileHandler() = default;
+    virtual void loadGrille(Grille &grille, const string &filename) = 0;       // Méthode virtuelle pure pour charger la grille
+    virtual void saveGrille(const Grille &grille, const string &filename) = 0; // Méthode virtuelle pure pour sauvegarder la grille
+    virtual ~IFileHandler() = default;                                         // Destructeur virtuel
 };
 
 // Rendu graphique
 class RenduGraphique : public IRendu
 {
 private:
-    RectangleShape cell;
+    RectangleShape cell; // Création d'un rectangle pour représenter les cellules
 
 public:
     RenduGraphique(int width, int height)
@@ -177,18 +182,18 @@ public:
         cell.setFillColor(Color::White);                          // couleur des cellules
     }
 
-    void render(const Grille &grille, float wait) override
+    void render(const Grille &grille, float wait) override // Méthode pour afficher la grille
     {
-        window.clear();
-        const auto &cellules = grille.getCellules();
-        for (int i = 0; i < grille.getLigne(); ++i)
+        window.clear();                              // efface le contenu de la fenetre graphique
+        const auto &cellules = grille.getCellules(); // récupère les cellules de la grille
+        for (int i = 0; i < grille.getLigne(); ++i)  // parcourt les lignes
         {
-            for (int j = 0; j < grille.getColonne(); ++j)
+            for (int j = 0; j < grille.getColonne(); ++j) // parcourt les colonnes
             {
-                if (cellules[i][j].getetat())
+                if (cellules[i][j].getetat()) // si la cellule est vivante
                 {
-                    cell.setPosition(j * cellSize, i * cellSize);
-                    window.draw(cell);
+                    cell.setPosition(j * cellSize, i * cellSize); // on positionne le rectangle à la position de la cellule
+                    window.draw(cell);                            // on dessine le rectangle
                 }
             }
         }
@@ -201,14 +206,14 @@ public:
 class FileHandler : public IFileHandler
 {
 public:
-    void loadGrille(Grille &grille, const string &filename) override
+    void loadGrille(Grille &grille, const string &filename) override // charge la grille depuis le fichier "input.txt"
     {
-        grille.loadFromFile(filename);
+        grille.loadFromFile(filename); // appelle la méthode loadFromFile de la classe Grille
     }
 
-    void saveGrille(const Grille &grille, const string &filename) override
+    void saveGrille(const Grille &grille, const string &filename) override // sauvegarde la grille dans le fichier "output.txt"
     {
-        grille.writeToFile(filename);
+        grille.writeToFile(filename); // appelle la méthode writeToFile de la classe Grille
     } // render affiche graphiquement l'état actuel de la grille en parcourant chaque cellule vivante, en dessinant un rectangle à sa position correspondante dans
     // la fenêtre après l'avoir effacée.
 };
@@ -335,7 +340,11 @@ public:
     {
         if (choix == 1)
         {
-            // Votre code existant
+            for (int iter = 0; iter < Maxiterations; ++iter)
+            {
+                fileHandler->saveGrille(grille, "iteration_out_" + to_string(iter) + ".txt"); // iteration 0 puis 1 puis ... pour dire que 0 c'est le template de base
+                grille.updateGrille();
+            }
         }
         else if (choix == 2)
         {
@@ -400,7 +409,6 @@ int main()
 
     cout << "Voulez-vous lancer en mode Console(1) ou Graphique(2) ? " << endl;
     cin >> choix;
-    cout << ok << endl;
     try
     {
         if (choix == 1)
